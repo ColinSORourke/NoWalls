@@ -2,7 +2,7 @@
     "RoslynExtensionsOptions": {
         "EnableAnalyzersSupport": true,
         "LocationPaths": [
-            "./NuGet/microsoft.unity.analyzers.1.9.0"
+            "NuGet/microsoft.unity.analyzers.1.11.1"
         ]
     }
 }
