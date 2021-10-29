@@ -1,0 +1,7 @@
+# Enables Or Disables Unity C# Warnings in VSCode
+# Must be paired with the omnisharp.json and NuGet folder
+# https://code.visualstudio.com/docs/other/unity
+root=true
+
+[*.cs]
+dotnet_diagnostic.IDE0051.severity = none
