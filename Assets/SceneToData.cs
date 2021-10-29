@@ -3,41 +3,52 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
+// This file provides an editor functionality for our game. Right clicking inside of assets and selecting Create -> My Game -> Save Scene calls this code.
+// The purpose of this is to allow us to block out each street in it's own scene, and save it to as a ScriptableObject asset to then be rendered in the core game scene.
+
 [ExecuteInEditMode]
 public static class SceneToData
 {
-
-    // Start is called before the first frame update
-    [MenuItem("Assets/Create/SaveScene")]
+    [MenuItem("Assets/Create/My Game/SaveScene")]
     public static void SaveSceneData()
     {
+        // Create the empty Scriptable Object
         ScriptObjStreet thisStreet = ScriptableObject.CreateInstance<ScriptObjStreet>();
 
+        // First look for an Object in the Scene named "Ground"
+        // We save the X and Z scale of the object, as well as it's color material.
+        // When rendered, these are used to create a plane with that scale and color as the 'ground.'
         GameObject ground = GameObject.Find("Ground");
         var groundTrans = ground.GetComponent<Transform>();
         thisStreet.Length = (int) groundTrans.localScale.x ;
-        thisStreet.Width = (int) groundTrans.localScale.y;
+        thisStreet.Width = (int) groundTrans.localScale.z;
 
+        // The orientation of the street is necessary knowledge. Currently, I check the axis that has a scale of 1, and assume the street moves perpendicularly to that.
+        // There are probably more robust ways to accomplish this.
         if (thisStreet.Width == 1){
             thisStreet.xOriented = true;
         } else {
             thisStreet.xOriented = false;
         }
-
         var groundMesh = ground.GetComponent<MeshRenderer>();
         thisStreet.Color = groundMesh.sharedMaterial;
 
+        // After loading the ground, we search for a game object named "ObjectParent". All actual game objects should be prefabs that are children of this parent.
         GameObject objPar = GameObject.Find("ObjectParent");
         thisStreet.objects = new streetObj[objPar.transform.childCount];
        
+        // Iterate over each child
         for (int i = 0; i < objPar.transform.childCount; i++){
             streetObj obj = new streetObj();
-            //Debug.Log(PrefabUtility.GetCorrespondingObjectFromSource(objPar.transform.GetChild(i).gameObject));
+            // Store the prefab used to instantiate it & it's position
+            // It is assumed the positions are relative to a street center at 0,0,0.
             obj.myPrefab = PrefabUtility.GetCorrespondingObjectFromSource(objPar.transform.GetChild(i).gameObject);
             obj.streetPos = objPar.transform.GetChild(i).GetComponent<Transform>().localPosition;
             thisStreet.objects[i] = obj;
         }
 
+        // Delete the previously saved version of this asset and overwrite it.
+        // I don't yet have a way to dynamically name these assets? So to save multiple scenes, just rename something other than Street5
         AssetDatabase.DeleteAsset("Assets/Street5.asset");
         AssetDatabase.CreateAsset(thisStreet, "Assets/Street5.asset");
         AssetDatabase.SaveAssets();

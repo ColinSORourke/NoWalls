@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// This makes my Sphere Prefab bounce up and down.
+
 public class BallController : MonoBehaviour
 {
     public float bounce = 0.0f;

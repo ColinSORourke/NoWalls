@@ -2,6 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// FlipNormals can be attached to any GameObject with a MeshFilter to have it render the inside faces of the object rather than the outside.
+// Taken from: https://www.youtube.com/watch?v=HEHn4EUUyBk&
+
 public class FlipNormals : MonoBehaviour
 {
     // Start is called before the first frame update
