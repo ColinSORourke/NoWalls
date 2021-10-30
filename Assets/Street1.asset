@@ -14,14 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Length: 20
   Width: 1
-  xOriented: 1
   Color: {fileID: 2100000, guid: 99c5cb8fd56344aa389630f297cb76d5, type: 2}
   intersections:
-  - position: {x: 85, y: 0, z: 0}
-    otherPosition: {x: 0, y: 0, z: 30}
+  - position: 85
+    otherPosition: 30
     other: {fileID: 11400000, guid: 368d17a115aab4608bd2d4e991d3d48f, type: 2}
-  - position: {x: -85, y: 0, z: 0}
-    otherPosition: {x: 0, y: 0, z: -30}
+  - position: -85
+    otherPosition: -30
     other: {fileID: 11400000, guid: 1e3986c56d44e4c829070a0a8cb5e9fc, type: 2}
   objects:
   - myPrefab: {fileID: 3647528197559950507, guid: d1b615b1bd02e41f282fc4b7047cab08, type: 3}

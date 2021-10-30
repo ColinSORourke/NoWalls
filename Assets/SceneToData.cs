@@ -20,16 +20,9 @@ public static class SceneToData
         // When rendered, these are used to create a plane with that scale and color as the 'ground.'
         GameObject ground = GameObject.Find("Ground");
         var groundTrans = ground.GetComponent<Transform>();
-        thisStreet.Length = (int) groundTrans.localScale.x ;
-        thisStreet.Width = (int) groundTrans.localScale.z;
-
-        // The orientation of the street is necessary knowledge. Currently, I check the axis that has a scale of 1, and assume the street moves perpendicularly to that.
-        // There are probably more robust ways to accomplish this.
-        if (thisStreet.Width == 1){
-            thisStreet.xOriented = true;
-        } else {
-            thisStreet.xOriented = false;
-        }
+        thisStreet.Length = groundTrans.localScale.x ;
+        thisStreet.Width = groundTrans.localScale.z;
+    
         var groundMesh = ground.GetComponent<MeshRenderer>();
         thisStreet.Color = groundMesh.sharedMaterial;
 

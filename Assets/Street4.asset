@@ -14,12 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Length: 6
   Width: 1
-  xOriented: 1
   Color: {fileID: 2100000, guid: a11160c5b12094ca6b2d1023c79e88d4, type: 2}
   intersections:
-  - position: {x: 20, y: 0, z: 0}
-    otherPosition: {x: 0, y: 0, z: 0}
+  - position: 20
+    otherPosition: 0
     other: {fileID: 11400000, guid: 368d17a115aab4608bd2d4e991d3d48f, type: 2}
-  - position: {x: -20, y: 0, z: 0}
-    otherPosition: {x: 0, y: 0, z: 0}
+  - position: -20
+    otherPosition: 0
     other: {fileID: 11400000, guid: 1e3986c56d44e4c829070a0a8cb5e9fc, type: 2}
+  objects: []

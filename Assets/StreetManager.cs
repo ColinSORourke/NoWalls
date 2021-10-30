@@ -20,7 +20,7 @@ public class StreetManager : MonoBehaviour
     void Start()
     {
         // We start by instantiating a renderedStreet from a Script Object attached to the player.
-        onStreet = new renderedStreet(myStreet, new Vector3(0, 0, 0), false);
+        onStreet = new renderedStreet(myStreet, new Vector3(0, 0, 0), false, false);
         wrapStreet = null;
     }
 
@@ -41,7 +41,7 @@ public class StreetManager : MonoBehaviour
         this.wraparoundLogic(25.0f, ref this.onStreet, ref this.wrapStreet);
 
         // This is crossing the wraparound 'edge'. We check orientation to know which edge to compare to.
-        if (myStreet.xOriented) {
+        if (onStreet.xOriented) {
             // When we cross the edge, we simple swap what is considered the main street and what is considered the clone.
             // myStreet (the scriptable object) does not need to change because it's the same for both of these streets.
             if (Mathf.Abs(relPos.x) > myStreet.Length * 5.0f){
@@ -52,7 +52,7 @@ public class StreetManager : MonoBehaviour
         } else {
             // When we cross the edge, we simple swap what is considered the main street and what is considered the clone.
             // myStreet (the scriptable object) does not need to change because it's the same for both of these streets.
-            if (Mathf.Abs(relPos.z) > myStreet.Width * 5.0f){
+            if (Mathf.Abs(relPos.z) > myStreet.Length * 5.0f){
                 var temp = wrapStreet;
                 wrapStreet = onStreet;
                 onStreet = temp;
@@ -83,11 +83,12 @@ public class StreetManager : MonoBehaviour
             }
             
             // This is still the player is standing inside an intersection & now we start checking for if they move into the intersecting street. Similar to the wraparound edges earlier, but a little tougher.
-            if (myStreet.xOriented){
+            if (onStreet.xOriented){
                 if (Mathf.Abs(relPos.z) > myStreet.Width * 5){
                     // Destroy everything, and reset with our mainStreet set to the intersecting street.
                     myStreet = interStreet.streetInfo;
                     var pos = interStreet.truePos;
+                    var orient = interStreet.xOriented;
                     onStreet.destroyStreet();
                     if (wrapStreet != null){
                         wrapStreet.destroyStreet();
@@ -99,13 +100,14 @@ public class StreetManager : MonoBehaviour
                         interStreetWrap.destroyStreet();
                         interStreetWrap = null;
                     }
-                    onStreet = new renderedStreet(myStreet, pos, false);
+                    onStreet = new renderedStreet(myStreet, pos, orient, false);
                 }
             } else {
-                if (Mathf.Abs(relPos.x) > myStreet.Length * 5){
+                if (Mathf.Abs(relPos.x) > myStreet.Width * 5){
                     // Destroy everything, and reset with our mainStreet set to the intersecting street.
                     myStreet = interStreet.streetInfo;
                     var pos = interStreet.truePos;
+                    var orient = interStreet.xOriented;
                     onStreet.destroyStreet();
                     if (wrapStreet != null){
                         wrapStreet.destroyStreet();
@@ -117,7 +119,7 @@ public class StreetManager : MonoBehaviour
                         interStreetWrap.destroyStreet();
                         interStreetWrap = null;
                     }
-                    onStreet = new renderedStreet(myStreet, pos, false);
+                    onStreet = new renderedStreet(myStreet, pos, orient, false);
                 }
             }
         }
@@ -140,17 +142,17 @@ public class StreetManager : MonoBehaviour
             if (wrapStreet is null){
                 Vector3 wrapPos;
                 float direction;
-                if (myInfo.xOriented){
+                if (street.xOriented){
                     // Determine clone street's true game position.
                     direction = Mathf.Sign(relPos.x);
                     wrapPos = street.truePos + new Vector3(myInfo.Length * 10.0f * direction, 0.0f,0.0f);
-                    wrapStreet = new renderedStreet(myInfo, wrapPos, false);
+                    wrapStreet = new renderedStreet(myInfo, wrapPos, street.xOriented, false);
                     wrapStreet.parent.name = "Wraparound";
                 } else {
                     // Determine clone street's true game position.
                     direction = Mathf.Sign(relPos.z);
-                    wrapPos = street.truePos + new Vector3(0.0f, 0.0f,myInfo.Width * 10.0f * direction);
-                    wrapStreet = new renderedStreet(myInfo, wrapPos, false);
+                    wrapPos = street.truePos + new Vector3(0.0f, 0.0f,myInfo.Length * 10.0f * direction);
+                    wrapStreet = new renderedStreet(myInfo, wrapPos, street.xOriented, false);
                     wrapStreet.parent.name = "Wraparound";
                 }
                 
@@ -172,6 +174,7 @@ public class renderedStreet {
     public Vector3 truePos;
     public GameObject parent;
     public bool fullyRendered;
+    public bool xOriented;
 
     public renderedStreet[] myIntersections;
 
@@ -184,9 +187,10 @@ public class renderedStreet {
     // Vector3 Pos, the true-game position of the street-center.
     // bool intersection - is this a full street we want to render, or the small intersection portion.
     // int interIndex - the index of intersection between this and another street. Helps avoid double-rendering some stuff, as well as correctly positioning the street.
-    public renderedStreet(ScriptObjStreet street, Vector3 pos, bool intersection, int interIndex = -1){
+    public renderedStreet(ScriptObjStreet street, Vector3 pos, bool orient, bool intersection, int interIndex = -1){
         streetInfo = street;
         truePos = pos;
+        xOriented = orient;
         // Create a Parent Game object at the street's true-game position. All other game objects will be childed to this parent, and thus their coordinates will be local to that position.
         parent = new GameObject();
         parent.name = "Street";
@@ -212,11 +216,13 @@ public class renderedStreet {
         parent.name = "Small intersection";
         // Place a much smaller ground square appropriately centered on the point of intersection.
         var groundTransform = ground.GetComponent<Transform>();
-        groundTransform.localPosition = streetInfo.intersections[i].position;
-        if (streetInfo.xOriented){
+        
+        if (xOriented){
+            groundTransform.localPosition = new Vector3 (streetInfo.intersections[i].position, 0.0f, 0.0f);
             groundTransform.localScale = new Vector3(2.0f, 1.0f, streetInfo.Width);
         } else {
-            groundTransform.localScale = new Vector3(streetInfo.Length, 1.0f, 2.0f);
+            groundTransform.localPosition = new Vector3 (0.0f, 0.0f, streetInfo.intersections[i].position);
+            groundTransform.localScale = new Vector3(streetInfo.Width, 1.0f, 2.0f);
         }
 
         myIntersections = new renderedStreet[0];
@@ -228,7 +234,12 @@ public class renderedStreet {
         // Place the full ground.
         var groundTransform = ground.GetComponent<Transform>();
         groundTransform.localPosition = new Vector3(0.0f,0.0f,0.0f);
-        groundTransform.localScale = new Vector3(streetInfo.Length, 1, streetInfo.Width);
+        if (xOriented){
+            groundTransform.localScale = new Vector3(streetInfo.Length, 1, streetInfo.Width);
+        } else {
+            groundTransform.localScale = new Vector3(streetInfo.Width, 1, streetInfo.Length);
+        }
+        
 
         fullyRendered = true;
 
@@ -238,12 +249,17 @@ public class renderedStreet {
         
         for(int j = 0; j < streetInfo.intersections.Length; j++){
             var inter = streetInfo.intersections[j];
-            Vector3 pos = truePos + inter.position - inter.otherPosition;
+            Vector3 pos;
+            if (xOriented){
+                pos = truePos + new Vector3(inter.position, 0.0f, 0.0f) - new Vector3(0.0f, 0.0f, inter.otherPosition);
+            } else {
+                pos = truePos + new Vector3(0.0f, 0.0f, inter.position) - new Vector3(inter.otherPosition, 0.0f, 0.0f);
+            }
             var otherStreet = inter.other;
             int index = this.getOtherIntersectionId(otherStreet);
             
             if (j != id){
-                var renderedInter = new renderedStreet(otherStreet, pos, true, index);
+                var renderedInter = new renderedStreet(otherStreet, pos, !xOriented, true, index);
                 myIntersections[j] = renderedInter;
             } else {
                 // Don't! Render a small intersection that we are already standing on.
@@ -266,10 +282,10 @@ public class renderedStreet {
     // This takes a players local position on the street & determines if the 'edge' is visible.
     public bool atEdge(float distance, Vector3 playerRelPos){
         bool answer = false;
-        if (streetInfo.xOriented){
+        if (xOriented){
             answer = Mathf.Abs(playerRelPos.x) + distance > streetInfo.Length * 5.0f;
         } else {
-            answer = Mathf.Abs(playerRelPos.z) + distance > streetInfo.Width * 5.0f;
+            answer = Mathf.Abs(playerRelPos.z) + distance > streetInfo.Length * 5.0f;
         }
         return answer;
     }
@@ -296,11 +312,17 @@ public class renderedStreet {
             }
         }
         var groundTransform = ground.GetComponent<Transform>();
-        groundTransform.localPosition = streetInfo.intersections[j].position;
-        if (streetInfo.xOriented){
+        Vector3 pos;
+        if (xOriented){
+            pos = new Vector3(streetInfo.intersections[j].position, 0.0f, 0.0f);
+        } else {
+            pos = new Vector3(0.0f, 0.0f, streetInfo.intersections[j].position);
+        }   
+        groundTransform.localPosition = pos;
+        if (xOriented){
             groundTransform.localScale = new Vector3(2.0f, 1.0f, streetInfo.Width);
         } else {
-            groundTransform.localScale = new Vector3(streetInfo.Length, 1.0f, 2.0f);
+            groundTransform.localScale = new Vector3(streetInfo.Width, 1.0f, 2.0f);
         }
 
         myIntersections = new renderedStreet[0];
@@ -313,12 +335,12 @@ public class renderedStreet {
         int index = -1;
         for (int i = 0; i < streetInfo.intersections.Length; i++){
             Intersection inter = streetInfo.intersections[i];
-            if (streetInfo.xOriented){
-                if (Mathf.Abs(inter.position.x - playerRelPos.x) <= 5.0f){
+            if (xOriented){
+                if (Mathf.Abs(inter.position - playerRelPos.x) <= 5.0f){
                     index = i;
                 }
             } else {
-                if (Mathf.Abs(inter.position.z - playerRelPos.z) <= 5.0f){
+                if (Mathf.Abs(inter.position - playerRelPos.z) <= 5.0f){
                     index = i;
                 }
             }
