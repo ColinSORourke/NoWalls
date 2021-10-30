@@ -275,7 +275,12 @@ public class renderedStreet {
             myObjects[i].transform.parent = parent.transform;
 
             var objTransform = myObjects[i].GetComponent<Transform>();
-            objTransform.localPosition = info.streetPos;
+            if (xOriented){
+                objTransform.localPosition = info.streetPos;
+            } else {
+                objTransform.localPosition = new Vector3 (info.streetPos.z, info.streetPos.y, info.streetPos.x);
+            }
+            
         }
     }
 
